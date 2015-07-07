@@ -11,9 +11,7 @@
 	src="webjars/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/libs/jso.js"></script>
 <script type="text/javascript" type="text/javascript">
-	$(document)
-			.ready(
-					function() {
+	var load = function() {
 
 						// Add configuration for one or more providers.
 						jso_configure({
@@ -43,7 +41,15 @@
 
 						jso_wipe();
 
-					});
+					};
+	$(document)
+			.ready(function () {
+				$("#getPhotos").click(load);
+				if(window.location.href.contains("access_token")) {
+					load();
+					$("#getPhotos").css("display", "none");
+				}
+			});
 </script>
 
 </head>
@@ -55,6 +61,7 @@
 		<p>Once you have authenticated and approved the access, some
 			JavaScript in this page will render a list of photos from Sparklr
 			below:</p>
+		<input id="getPhotos" type="button" value="get photos"/>
 		<p id="message" />
 	</div>
 
