@@ -61,7 +61,7 @@ public class OAuth2AuthenticationProcessingFilter implements Filter, Initializin
 
 	private AuthenticationDetailsSource<HttpServletRequest, ?> authenticationDetailsSource = new OAuth2AuthenticationDetailsSource();
 
-	private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+	private TokenExtractor tokenExtractor = new MacTokenExtractor();
 
 	private AuthenticationEventPublisher eventPublisher = new NullEventPublisher();
 

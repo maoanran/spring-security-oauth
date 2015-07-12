@@ -129,6 +129,14 @@ public class DefaultTokenServices implements AuthorizationServerTokenServices, R
 
 	}
 
+	public String getMacKey() {
+		return UUID.randomUUID().toString();
+	}
+
+	public String getMacArithmetic() {
+		return "HmacSha256";
+	}
+
 	@Transactional(noRollbackFor={InvalidTokenException.class, InvalidGrantException.class})
 	public OAuth2AccessToken refreshAccessToken(String refreshTokenValue, TokenRequest tokenRequest)
 			throws AuthenticationException {
@@ -297,6 +305,8 @@ public class DefaultTokenServices implements AuthorizationServerTokenServices, R
 		}
 		token.setRefreshToken(refreshToken);
 		token.setScope(authentication.getOAuth2Request().getScope());
+		token.setMacArithmetic(getMacArithmetic());
+		token.setMacKey(getMacKey());
 
 		return accessTokenEnhancer != null ? accessTokenEnhancer.enhance(token, authentication) : token;
 	}

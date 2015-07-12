@@ -319,6 +319,14 @@ public class AuthorizationEndpoint extends AbstractEndpoint {
 				vars.put("extra_" + key, value);
 			}
 		}
+		String mac_key = accessToken.getMacKey();
+		if (mac_key != null) {
+			vars.put("mac_key", mac_key);
+		}
+		String mac_arithmetic = accessToken.getMacArithmetic();
+		if(mac_arithmetic != null) {
+			vars.put("mac_arithmetic", mac_arithmetic);
+		}
 		// Do not include the refresh token (even if there is one)
 		return append(authorizationRequest.getRedirectUri(), vars, keys, true);
 	}

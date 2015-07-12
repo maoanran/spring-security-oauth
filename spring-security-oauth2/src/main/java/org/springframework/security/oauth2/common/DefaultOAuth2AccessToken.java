@@ -32,6 +32,26 @@ public class DefaultOAuth2AccessToken implements Serializable, OAuth2AccessToken
 
 	private Map<String, Object> additionalInformation = Collections.emptyMap();
 
+	private String MAC_KEY;
+
+	private String MAC_ARITHMETIC;
+
+	public String getMacKey() {
+		return MAC_KEY;
+	}
+
+	public String getMacArithmetic() {
+		return MAC_ARITHMETIC;
+	}
+
+	public void setMacKey(String MAC_KEY) {
+		this.MAC_KEY = MAC_KEY;
+	}
+
+	public void setMacArithmetic(String MAC_ARITHMETIC) {
+		this.MAC_ARITHMETIC = MAC_ARITHMETIC;
+	}
+
 	/**
 	 * Create an access token from the value provided.
 	 */

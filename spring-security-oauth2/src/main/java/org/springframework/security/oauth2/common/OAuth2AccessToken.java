@@ -27,7 +27,7 @@ import java.util.Set;
 
 public interface OAuth2AccessToken {
 
-	public static String BEARER_TYPE = "Bearer";
+	public static String BEARER_TYPE = "Mac";
 
 	public static String OAUTH2_TYPE = "OAuth2";
 
@@ -83,4 +83,7 @@ public interface OAuth2AccessToken {
 
 	String getValue();
 
+	String getMacKey();
+
+	String getMacArithmetic();
 }

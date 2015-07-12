@@ -402,7 +402,11 @@
 			settings.data["access_token"] = token["access_token"];
 		} else {
 			if (!settings.headers) settings.headers = {};
-			settings.headers["Authorization"] = "Bearer " + token["access_token"];
+			settings.headers["Authorization"] = "Mac " + token["access_token"];
+			var SHA256 =  new Hashes.SHA256;
+			console.log('SHA256: ' + SHA256.hex("asd"));
+			var timestamp = (new Date()).valueOf();
+			console.log('timestamp: ' + timestamp);
 		}
 
 		$.ajax(settings);
