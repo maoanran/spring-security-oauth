@@ -35,10 +35,14 @@ public class MacTokenExtractor implements TokenExtractor {
 	private final static Log logger = LogFactory.getLog(MacTokenExtractor.class);
 
 	@Override
-	public Authentication extract(HttpServletRequest request) {
+	public MacPreAuthenticatedAuthenticationToken extract(HttpServletRequest request) {
 		String tokenValue = extractToken(request);
-		if (tokenValue != null) {
-			PreAuthenticatedAuthenticationToken authentication = new PreAuthenticatedAuthenticationToken(tokenValue, "");
+		String access_token = tokenValue;
+		String mac = extractMac(request);
+		String ts = extractTimeStamp(request);
+		String nonce = extractNonce(request);
+		if (tokenValue != null && access_token != null && mac != null && ts != null && nonce != null) {
+			MacPreAuthenticatedAuthenticationToken authentication = new MacPreAuthenticatedAuthenticationToken(tokenValue, "", mac, access_token, ts, nonce);
 			return authentication;
 		}
 		return null;
@@ -64,7 +68,7 @@ public class MacTokenExtractor implements TokenExtractor {
 	}
 
 	/**
-	 * Extract the OAuth bearer token from a header.
+	 * Extract the OAuth mac token from a header.
 	 * 
 	 * @param request The request.
 	 * @return The token, or null if no OAuth authorization header was supplied.
@@ -84,6 +88,54 @@ public class MacTokenExtractor implements TokenExtractor {
 				}
 				return authHeaderValue;
 			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extract the OAuth timestamp
+	 * 
+	 * @param request The request.
+	 * @return The timestamp, or null if no OAuth ts header was supplied.
+	 */
+	protected String extractTimeStamp(HttpServletRequest request) {
+		Enumeration<String> headers = request.getHeaders("ts");
+		while (headers.hasMoreElements()) { // typically there is only one (most servers enforce that)
+			String value = headers.nextElement();
+			return value;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extract the OAuth nonce
+	 * 
+	 * @param request The request.
+	 * @return The nonce, or null if no OAuth ts header was supplied.
+	 */
+	protected String extractNonce(HttpServletRequest request) {
+		Enumeration<String> headers = request.getHeaders("nonce");
+		while (headers.hasMoreElements()) { // typically there is only one (most servers enforce that)
+			String value = headers.nextElement();
+			return value;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extract the OAuth nonce
+	 * 
+	 * @param request The request.
+	 * @return The nonce, or null if no OAuth ts header was supplied.
+	 */
+	protected String extractMac(HttpServletRequest request) {
+		Enumeration<String> headers = request.getHeaders("mac");
+		while (headers.hasMoreElements()) { // typically there is only one (most servers enforce that)
+			String value = headers.nextElement();
+			return value;
 		}
 
 		return null;

@@ -103,6 +103,35 @@ public class OAuth2AuthenticationManager implements AuthenticationManager, Initi
 
 	}
 
+	public Authentication authenticateMacToken(MacPreAuthenticatedAuthenticationToken authentication) throws AuthenticationException {
+
+		if (authentication == null) {
+			throw new InvalidTokenException("Invalid token (token not found)");
+		}
+		String token = (String) authentication.getPrincipal();
+		OAuth2Authentication auth = tokenServices.loadAuthentication(token);
+		if (auth == null) {
+			throw new InvalidTokenException("Invalid token: " + token);
+		}
+
+		Collection<String> resourceIds = auth.getOAuth2Request().getResourceIds();
+		if (resourceId != null && resourceIds != null && !resourceIds.isEmpty() && !resourceIds.contains(resourceId)) {
+			throw new OAuth2AccessDeniedException("Invalid token does not contain resource id (" + resourceId + ")");
+		}
+
+		checkClientDetails(auth);
+
+		if (authentication.getDetails() instanceof OAuth2AuthenticationDetails) {
+			OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) authentication.getDetails();
+			// Preserve the authentication details if any from the one loaded by token services
+			details.setDecodedDetails(auth.getDetails());
+		}
+		auth.setDetails(authentication.getDetails());
+		auth.setAuthenticated(true);
+		return auth;
+
+	}
+
 	private void checkClientDetails(OAuth2Authentication auth) {
 		if (clientDetailsService != null) {
 			ClientDetails client;

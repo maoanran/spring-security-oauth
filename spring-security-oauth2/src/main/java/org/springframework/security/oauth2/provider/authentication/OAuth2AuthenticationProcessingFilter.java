@@ -128,7 +128,7 @@ public class OAuth2AuthenticationProcessingFilter implements Filter, Initializin
 
 		try {
 
-			Authentication authentication = tokenExtractor.extract(request);
+			MacPreAuthenticatedAuthenticationToken authentication = ((MacTokenExtractor)tokenExtractor).extract(request);
 			
 			if (authentication == null) {
 				if (stateless && isAuthenticated()) {
@@ -147,7 +147,7 @@ public class OAuth2AuthenticationProcessingFilter implements Filter, Initializin
 					AbstractAuthenticationToken needsDetails = (AbstractAuthenticationToken) authentication;
 					needsDetails.setDetails(authenticationDetailsSource.buildDetails(request));
 				}
-				Authentication authResult = authenticationManager.authenticate(authentication);
+				Authentication authResult = ((OAuth2AuthenticationManager)authenticationManager).authenticateMacToken(authentication);
 
 				if (debug) {
 					logger.debug("Authentication success: " + authResult);
