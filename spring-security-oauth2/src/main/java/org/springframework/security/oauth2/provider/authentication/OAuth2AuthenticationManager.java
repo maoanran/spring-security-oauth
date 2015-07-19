@@ -12,6 +12,9 @@
  */
 package org.springframework.security.oauth2.provider.authentication;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.client.resource.OAuth2AccessDeniedException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.AuthorizationRequest;
@@ -103,6 +107,23 @@ public class OAuth2AuthenticationManager implements AuthenticationManager, Initi
 
 	}
 
+	public static String sha256(String base) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		StringBuffer hexString = new StringBuffer();
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] hash = digest.digest(base.getBytes("UTF-8"));
+
+		for (int i = 0; i < hash.length; i++) {
+			String hex = Integer.toHexString(0xff & hash[i]);
+			if(hex.length() == 1) hexString.append('0');
+			hexString.append(hex);
+		}
+		return hexString.toString();
+	}
+
+	private String extractMacKey(String access_token) {
+		return JwtHelper.decode(access_token).getClaims();
+	}
+
 	public Authentication authenticateMacToken(MacPreAuthenticatedAuthenticationToken authentication) throws AuthenticationException {
 
 		if (authentication == null) {
@@ -112,6 +133,21 @@ public class OAuth2AuthenticationManager implements AuthenticationManager, Initi
 		OAuth2Authentication auth = tokenServices.loadAuthentication(token);
 		if (auth == null) {
 			throw new InvalidTokenException("Invalid token: " + token);
+		} else {
+				String rightMac = null;
+				try {
+					String macKey = extractMacKey(authentication.getAccess_token());
+					rightMac = sha256(macKey + authentication.getTime_stamp() + authentication.getNonce());
+				} catch (NoSuchAlgorithmException e) {
+					throw new InvalidTokenException("Invalid token: " + token, e);
+				} catch (UnsupportedEncodingException e) {
+					throw new InvalidTokenException("Invalid token: " + token, e);
+				} catch (IllegalArgumentException e) {
+					throw new InvalidTokenException("Invalid token: " + token, e);
+				}
+				if (rightMac != null && !rightMac.toString().equals(authentication.getMac())) {
+					throw new InvalidTokenException("Invalid token: " + token);
+				}
 		}
 
 		Collection<String> resourceIds = auth.getOAuth2Request().getResourceIds();

@@ -21,6 +21,9 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
+import org.springframework.security.jwt.crypto.sign.MacSigner;
 import org.springframework.security.oauth2.common.DefaultExpiringOAuth2RefreshToken;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
@@ -297,8 +300,23 @@ public class DefaultTokenServices implements AuthorizationServerTokenServices, R
 		return new DefaultOAuth2RefreshToken(value);
 	}
 
+	final static byte[] HMAC_KEY;
+
+	static {
+		int[] keyInts = new int[] {3, 35, 53, 75, 43, 15, 165, 188, 131, 126, 6, 101, 119, 123, 166, 143, 90, 179, 40, 230, 240, 84, 201, 40, 169, 15, 132, 178, 210, 80, 46, 191, 211, 251, 90, 146, 210, 6, 71, 239, 150, 138, 180, 195, 119, 98, 61, 34, 61, 46, 33, 114, 5, 46, 79, 8, 192, 205, 154, 245, 103, 208, 128, 163};
+		HMAC_KEY = new byte[keyInts.length];
+
+		for (int i=0; i < keyInts.length; i++) {
+			HMAC_KEY[i] = (byte)keyInts[i];
+		}
+	}
+
+	public static final MacSigner hmac = new MacSigner(HMAC_KEY);
+
 	private OAuth2AccessToken createAccessToken(OAuth2Authentication authentication, OAuth2RefreshToken refreshToken) {
-		DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken(UUID.randomUUID().toString());
+		String mac_key = getMacKey();
+		Jwt jwt = JwtHelper.encode(mac_key, hmac);
+		DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken(jwt.getEncoded());
 		int validitySeconds = getAccessTokenValiditySeconds(authentication.getOAuth2Request());
 		if (validitySeconds > 0) {
 			token.setExpiration(new Date(System.currentTimeMillis() + (validitySeconds * 1000L)));
@@ -306,7 +324,7 @@ public class DefaultTokenServices implements AuthorizationServerTokenServices, R
 		token.setRefreshToken(refreshToken);
 		token.setScope(authentication.getOAuth2Request().getScope());
 		token.setMacArithmetic(getMacArithmetic());
-		token.setMacKey(getMacKey());
+		token.setMacKey(mac_key);
 
 		return accessTokenEnhancer != null ? accessTokenEnhancer.enhance(token, authentication) : token;
 	}

@@ -402,16 +402,35 @@
 			settings.data["access_token"] = token["access_token"];
 		} else {
 			if (!settings.headers) settings.headers = {};
-			var SHA256 =  new Hashes.SHA256;
 			settings.headers["Authorization"] = "Mac " + token["access_token"];
-			settings.headers["mac"] = SHA256.hex(token["mac_key"]);
 			settings.headers["ts"] = (new Date()).valueOf();
-			settings.headers["nonce"] = (new Date()).valueOf();
+			settings.headers["nonce"] = randomString(64);
+			settings.headers["mac"] = encodeMac(token["mac_key"], settings.headers["ts"], settings.headers["nonce"]);
 		}
 
 		$.ajax(settings);
 
 	};
+
+	function randomString(length) {
+		var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz'.split('');
+
+		if (! length) {
+			length = Math.floor(Math.random() * chars.length);
+		}
+
+		var str = '';
+		for (var i = 0; i < length; i++) {
+			str += chars[Math.floor(Math.random() * chars.length)];
+		}
+		return str;
+	}
+
+	function encodeMac(mac_key, ts, nonce) {
+		var SHA256 =  new Hashes.SHA256;
+		var tmp = SHA256.hex(mac_key + ts + nonce);
+		return tmp;
+	}
 
 
 })(window, jQuery);
